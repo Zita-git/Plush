@@ -15,8 +15,9 @@ class PlushiesController extends Controller
      */
     public function index()
     {
-        $plushies = Plushies::orderBy('name')->get();
-        return view('plushies.index', [ 'plushies' => $plushies ]);
+        
+        $plushies = Plush::all();
+        return response()->json($plushies);
     }
 
     /**
@@ -26,7 +27,6 @@ class PlushiesController extends Controller
      */
     public function create()
     {
-        return view('plushies.create');
     }
 
     /**
@@ -38,11 +38,19 @@ class PlushiesController extends Controller
     public function store(Request $request)
     {
         
-        $adatok = $request->only(['name']);
-        $plush = new Plushies();
-        $plush->fill($adatok);
-        $plush->save();
-        return redirect()->route('plushies.index');
+        $validator = Validator::make($request->all(), (new PlushRequest())->rules());
+        if ($validator->fails()) {
+            $errormsg = "";
+            foreach ($validator->errors()->all() as $error) {
+                $errormsg .= $error . " ";
+            }
+            $errormsg = trim($errormsg);
+            return response()->json($errormsg, 400);
+        }
+        $plsuh = new Plush();
+        $plsuh->fill($request->all());
+        $plsuh->save();
+        return response()->json($plsuh, 201);
     }
 
     /**
@@ -53,7 +61,11 @@ class PlushiesController extends Controller
      */
     public function show(Plushies $plushies)
     {
-        return view('plushies.show', ['plush' => $plushies]);
+        $plush = Plush::find($id);
+        if (is_null($plush)) {
+            return response()->json(["message" => "A megadott azonosítóval nem található plush."], 404);
+        }
+        return response()->json($plush);
     }
 
     /**
@@ -62,9 +74,26 @@ class PlushiesController extends Controller
      * @param  \App\Models\Plushies  $plushies
      * @return \Illuminate\Http\Response
      */
-    public function edit(Plushies $plushies)
+    public function update(Request $request, int $id)
     {
-        return view('plushies.edit', ['plush' => $plushies]);
+        if ($request->isMethod('PUT')) {
+            $validator = Validator::make($request->all(), (new PlushRequest())->rules());
+            if ($validator->fails()) {
+                $errormsg = "";
+                foreach ($validator->errors()->all() as $error) {
+                    $errormsg .= $error . " ";
+                }
+                $errormsg = trim($errormsg);
+                return response()->json($errormsg, 400);
+            }
+        }
+        $plsuh = Plush::find($id);
+        if (is_null($plsuh)) {
+            return response()->json(["message" => "A megadott azonosítóval nem található Plush."], 404);
+        }
+        $plsuh->fill($request->all());
+        $plsuh->save();
+        return response()->json($plsuh, 200);
     }
 
     /**
@@ -74,13 +103,6 @@ class PlushiesController extends Controller
      * @param  \App\Models\Plushies  $plushies
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Plushies $plushies)
-    {
-        $adatok = $request->only(['person', 'height', 'pricename']);
-        $plushies->fill($adatok);
-        $plushies->save();
-        return redirect()->route('plushies.show', $plushies->id);
-    }
 
     /**
      * Remove the specified resource from storage.
@@ -90,7 +112,11 @@ class PlushiesController extends Controller
      */
     public function destroy(Plushies $plushies)
     {
-        $plushies->delete();
-        return redirect()->route('plushies.index');
+        $plush = Plush::find($id);
+        if (is_null($plush)) {
+            return response()->json(["message" => "A megadott azonosítóval nem található plush."], 404);
+        }
+        Plush::destroy($id);
+        return response()->noContent();
     }
 }

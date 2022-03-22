@@ -8,4 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Plushies extends Model
 {
     use HasFactory;
+    protected $fillable = ['name'];
+
+    protected $visible = ['id','name'];
 }
