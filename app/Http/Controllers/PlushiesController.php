@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Plushies;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class PlushiesController extends Controller
 {
@@ -14,7 +15,8 @@ class PlushiesController extends Controller
      */
     public function index()
     {
-        //
+        $plushies = Plushies::orderBy('name')->get();
+        return view('plushies.index', [ 'plushies' => $plushies ]);
     }
 
     /**
@@ -24,7 +26,7 @@ class PlushiesController extends Controller
      */
     public function create()
     {
-        //
+        return view('plushies.create');
     }
 
     /**
@@ -35,7 +37,12 @@ class PlushiesController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
+        $adatok = $request->only(['name']);
+        $plush = new Plushies();
+        $plush->fill($adatok);
+        $plush->save();
+        return redirect()->route('plushies.index');
     }
 
     /**
@@ -46,7 +53,7 @@ class PlushiesController extends Controller
      */
     public function show(Plushies $plushies)
     {
-        //
+        return view('plushies.show', ['plush' => $plushies]);
     }
 
     /**
@@ -57,7 +64,7 @@ class PlushiesController extends Controller
      */
     public function edit(Plushies $plushies)
     {
-        //
+        return view('plushies.edit', ['plush' => $plushies]);
     }
 
     /**
@@ -69,7 +76,10 @@ class PlushiesController extends Controller
      */
     public function update(Request $request, Plushies $plushies)
     {
-        //
+        $adatok = $request->only(['person', 'height', 'pricename']);
+        $plushies->fill($adatok);
+        $plushies->save();
+        return redirect()->route('plushies.show', $plushies->id);
     }
 
     /**
@@ -80,6 +90,7 @@ class PlushiesController extends Controller
      */
     public function destroy(Plushies $plushies)
     {
-        //
+        $plushies->delete();
+        return redirect()->route('plushies.index');
     }
 }
